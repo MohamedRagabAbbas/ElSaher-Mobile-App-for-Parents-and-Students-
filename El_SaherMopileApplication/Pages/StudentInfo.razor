@@ -1,0 +1,105 @@
+﻿@using Blazored.LocalStorage;
+@using El_SaherMopileApplication.Models;
+@using El_SaherMopileApplication.Services;
+@inject IManager manger 
+@page "/StudentInfo/{studentName}/{studentPhoneNumber}"
+@inject ILocalStorageService _localStorage;
+
+<h3 style="align-self:center; text-align:center; text-decoration:underline; letter-spacing:2px; color:#0A6EBD">بيانات الطالب</h3>
+<div class="container" style="justify-content:center;  ">
+    @if (student!=null)
+    {
+            <div class="card " style="width: 18rem; justify-content:center; justify-self:center; align-self:center; margin: 20px auto">
+                <img class="card-img-top align-self-center " src="https://www.w3schools.com/bootstrap4/img_avatar1.png" alt="صورة الطالب">
+                <table class="fl-table">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>اسم الطالب</td>
+                            <td>@(student.Name)</td>
+                        </tr>
+                        <tr>
+                            <td>رقم الطالب المحمول</td>
+                            <td>@(student.ContactNumber)</td>
+                        </tr>
+                        <tr>
+                            <td>الصف</td>
+                            <td>@(student.StudentGrade)</td>
+                        </tr>
+                        <tr>
+                            <td>المجموعة المسجل بها</td>
+                            <td>@(student.Course.Name)</td>
+                        </tr>
+                        <tr>
+                            <td>رسوم حضور مدة شهر</td>
+                            <td>@(student.Course.Cost)</td>
+                        </tr>
+                        <tr>
+                            <td>مواعيد الدرس الاسبوعية</td>
+                            <td>@(student.Course.Schedule)</td>
+                        </tr>
+                        <tr>
+                            <td>تقيم الطالب</td>
+                            <td>@(student.StudentRate)</td>
+                        </tr>
+     
+                    </tbody>
+                </table>
+
+            </div>
+    }
+    else
+    {
+        <h6>انتظر حتي يتم استقبال بيانات الطالب</h6>
+    }
+    @if(student!=null)
+    {
+        <div class="row" style="justify-content:space-evenly">
+            <a class="btn btn-outline-primary text-center col-5 " href="/StudentAttendance/@student.StudentID">سجل حضور الطالب</a>
+            <a class="btn btn-outline-primary text-center col-5" href="/StudentExam/@student.StudentID">نتائج الامتحانات</a>
+        </div>
+        <div class="row" style="justify-content:space-evenly; margin-top:20px">
+            <a class="btn btn-outline-primary text-center col-5 " href="/Fee/@student.StudentID">مصاريف الدرس</a>
+            <a class="btn btn-outline-primary text-center col-5" href="/ExcellentStudents/@(student.CourseId)">الطلاب المتفوقون</a>
+        </div>
+    }
+</div>
+
+
+@code {
+
+    [Parameter]
+    public string studentName { get; set; }
+    [Parameter]
+    public string studentPhoneNumber { get; set; }
+    public Student student { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            ServiceResponse<Student> StudentResponse= await manger.GetStudentByNameAndPhoneNumber(studentName,studentPhoneNumber);
+            if (StudentResponse != null)
+            {
+                student = StudentResponse.Data;
+                await _localStorage.SetItemAsync<Student>("student", student);
+            }
+        }
+        catch (Exception)
+        {
+            if (await _localStorage.ContainKeyAsync("student"))
+            {
+                var stu = await _localStorage.GetItemAsync<Student>("student");
+                if (stu.Name == studentName && stu.ContactNumber == studentPhoneNumber)
+                {
+                    student = stu;
+                }
+            }
+        }
+    }
+}

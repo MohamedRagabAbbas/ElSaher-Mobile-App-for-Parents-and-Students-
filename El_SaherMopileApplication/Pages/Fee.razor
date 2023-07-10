@@ -1,0 +1,87 @@
+﻿@using Blazored.LocalStorage;
+@using El_SaherMopileApplication.Models;
+@using El_SaherMopileApplication.Services;
+@page "/Fee/{studentId:int}"
+@inject IManager manger
+@inject ILocalStorageService _localStorage;
+
+
+<h3 style="align-self:center; text-align:center; text-decoration:underline; letter-spacing:2px; color:#0A6EBD">سجل مصاريف الدرس</h3>
+<div class="container" style="justify-content:center;  ">
+    <div class="card border-1" style="min-width:100%">
+        @if (student != null)
+        {
+            <img class="card-img-top w-75 align-self-center" src="https://www.w3schools.com/bootstrap4/img_avatar1.png" alt="صورة الطالب">
+            <table class="fl-table" style="justify-self:center ">
+                <thead>
+                    <tr>
+                        <th>التاريخ</th>
+                        <th> شهر</th>
+                        <th>القيمة</th>
+                        <th>حالة الطالب</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (student.MonthFees != null)
+                    {
+                        @foreach (var item in student.MonthFees)
+                        {
+                            @if (item != null)
+                            {
+                                <tr>
+                                    <td>@(item.Month.ToShortDateString())</td>
+                                    <td>@(item.Name)</td>
+                                    <td>@(item.Fees)</td>
+                                    @if (item.IsPaid == true)
+                                    {
+                                        <td>  تم الدفع </td>
+                                    }
+                                    else
+                                    {
+                                        <td> لم يتم الدفع</td>
+                                    }
+                                </tr>
+                            }
+                        }
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <h6>انتظر حتي يتم استقبال بيانات الطالب</h6>
+        }
+
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int? studentId { get; set; }
+    public Student student { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            student = await manger.GetStudentById(studentId.Value);
+            if (student != null)
+            {
+                await _localStorage.SetItemAsync<Student>("student", student);
+            }
+        }
+        catch (Exception)
+        {
+            if (await _localStorage.ContainKeyAsync("student"))
+            {
+                var stu = await _localStorage.GetItemAsync<Student>("student");
+                if (stu.StudentID == studentId.Value)
+                {
+                    student = stu;
+
+                }
+            }
+        }
+    }
+}
+
+

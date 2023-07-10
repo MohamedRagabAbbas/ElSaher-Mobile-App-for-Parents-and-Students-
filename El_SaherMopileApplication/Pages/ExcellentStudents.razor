@@ -1,0 +1,90 @@
+﻿@using Blazored.LocalStorage;
+@using El_SaherMopileApplication.Models;
+@using El_SaherMopileApplication.Services;
+@inject IManager manger
+@page "/ExcellentStudents/{CourseId:int}"
+@inject ILocalStorageService _localStorage;
+
+
+
+<h3 style="align-self:center; text-align:center; text-decoration:underline; letter-spacing:2px; color:#0A6EBD">الطلاب المتفوقون</h3>
+<div class="" style="justify-content:center;  ">
+    @if (students != null)
+    {
+        <div class="card " style="width: 20rem; justify-content:center; justify-self:center; align-self:center; margin: 20px auto">
+            <img class="card-img-top align-self-center " src="https://www.w3schools.com/bootstrap4/img_avatar1.png" alt="صورة الطالب">
+            <table class="fl-table">
+                <thead>
+                    <tr>
+                        <th>ترتيب الطالب</th>
+                        <th>اسم الطالب</th>
+                        <th>النسبة التراكمية</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (Student student in students)
+                    {
+                        decimal sum = 0;
+                        int num = 0;
+                        @if (student!=null)
+                        {
+                            <tr>
+                                <td>@(students.IndexOf(student) + 1)</td>
+                                <td>@(student.Name)</td>
+                                @if(student.Exams!=null)
+                                {
+                                    @foreach (var exam in student.Exams)
+                                    {
+                                        @if (exam != null)
+                                        {
+                                            sum += (exam.Score) / (exam.OutOf);
+                                            num += 1;
+                                        }
+                                    }
+                                }
+                                <td>@(Math.Round(((sum / num)*100),2)) %</td> 
+                            </tr>
+                        }
+                        
+                    }
+                </tbody>
+            </table>
+
+        </div>
+    }
+    else
+    {
+        <h6>انتظر حتي يتم استقبال بيانات الطالب</h6>
+    }
+
+</div>
+
+
+@code {
+    [Parameter]
+    public int? CourseId { get; set; }
+
+    private List<Student> students { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var stu = await manger.GetExcellentStudents(CourseId.Value);
+            if (stu != null)
+            {
+                students = stu;
+                await _localStorage.SetItemAsync<List<Student>>("ExcellentStudents", students);
+            }
+        }
+        catch (Exception ex)
+        {
+            if (await _localStorage.ContainKeyAsync("ExcellentStudents"))
+            {
+                var _students = await _localStorage.GetItemAsync<List<Student>>("ExcellentStudents");
+                if (_students[0].CourseId == CourseId.Value)
+                    students = _students;
+            }
+            Console.WriteLine(ex.Message);
+        }
+    }
+}

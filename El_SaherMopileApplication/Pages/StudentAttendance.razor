@@ -1,0 +1,88 @@
+﻿@using Blazored.LocalStorage;
+@using El_SaherMopileApplication.Models;
+@using El_SaherMopileApplication.Services;
+@page "/StudentAttendance/{studentId:int}"
+@inject IManager manger
+@inject ILocalStorageService _localStorage;
+
+
+<h3 style="align-self:center; text-align:center; text-decoration:underline; letter-spacing:2px; color:#0A6EBD">سجل الحضور والغياب للطالب</h3>
+<div class="container" style="justify-content:center;  ">
+    @if (student != null)
+    {
+        <div class="card " style="width: 18rem; justify-content:center; justify-self:center; align-self:center; margin: 20px auto">
+            <img class="card-img-top align-self-center " src="https://www.w3schools.com/bootstrap4/img_avatar1.png" alt="صورة الطالب">
+            <table class="fl-table">
+                <thead>
+                    <tr>
+                        <th>رقم الحصة</th>
+                        <th>تاريخ الحصة</th>
+                        <th>حاضر/ غائب</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (student.Attendances!=null)
+                    {
+                        @foreach (var item in student.Attendances)
+                        {
+                            @if(item!=null)
+                            {
+                                <tr>
+                                    <td>@(item.SessionNumber)</td>
+                                    <td>@(item.AttendanceDate.ToShortDateString())</td>
+                                    @if (item.AttendanceStatus == true)
+                                    {
+                                        <td>  حاضر </td>
+                                    }
+                                    else
+                                    {
+                                        <td> غائب</td>
+                                    }
+                                </tr>
+                            }
+                            
+                        }
+                    }
+                </tbody>
+            </table>
+
+        </div>
+    }
+    else
+    {
+        <h6>انتظر حتي يتم استقبال بيانات الطالب</h6>
+    }
+
+</div>
+
+@code {
+
+    [Parameter]
+    public int? studentId { get; set; }
+    public Student student { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            student = await manger.GetStudentById(studentId.Value);
+            if (student != null)
+            {
+                await _localStorage.SetItemAsync<Student>("student", student);
+            }
+        }
+        catch (Exception)
+        {
+            if (await _localStorage.ContainKeyAsync("student"))
+            {
+                var stu = await _localStorage.GetItemAsync<Student>("student");
+                if (stu.StudentID == studentId.Value)
+                {
+                    student = stu;
+
+                }
+            }
+        }
+    }
+}
+
+

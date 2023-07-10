@@ -1,0 +1,113 @@
+﻿@page "/"
+@using Blazored.LocalStorage;
+@using El_SaherMopileApplication.Models;
+@using El_SaherMopileApplication.Services;
+@inject ILocalStorageService _localStorage;
+@inject NavigationManager NavigationManager;
+@inject IManager manger;
+
+
+<div class="container" >
+	<div class="screen">
+		<div class="screen__content" style="justify-content:center">
+
+			<form class="login">
+@*				<div style="align-self:center; justify-self:center; min-width:100%" class="text-center">
+					<p style="font-size:30px; margin-top:-40px; ">الساحر في الرياضيات</p>
+				</div>*@
+				<div class="login__field">
+					<i class="login__icon fas fa-user"></i>
+					<input type="text" class="login__input" @bind="@studentName" @oninput="@changeStudentName" placeholder="ادخل إسم الطالب" >
+				</div>
+				<div class="login__field">
+					<i class="login__icon fas fa-lock"></i>
+					<input type="text" class="login__input" @bind="@studentPhoneNumber" @oninput="@changeStudentPhoneNumber" placeholder="ادخل رقم الهاتف " >
+				</div>
+				<a class="button login__submit" @onclick="TestLogin">
+					<span class="button__text">سجل الان</span>
+					<i class="button__icon fas fa-chevron-right"></i>
+				</a>
+				@if (NotValid)
+				{
+					<div class=" alert-danger mt-3 p-2">
+						<p class=" " >@message</p>
+					</div>
+				}
+			</form>
+		</div>
+		<div class="screen__background">
+			<span class="screen__background__shape screen__background__shape4"></span>
+			<span class="screen__background__shape screen__background__shape3"></span>
+			<span class="screen__background__shape screen__background__shape2"></span>
+			<span class="screen__background__shape screen__background__shape1"></span>
+		</div>
+	</div>
+
+</div>
+
+
+@code
+{
+	private int? studentId { get; set; } 
+	private string studentName { get; set; } = "";
+	private string studentPhoneNumber { get; set; } = "";
+	private bool NotValid { get; set; } = false;
+	public string message { get; set; } = "";
+	protected override async Task OnInitializedAsync()
+	{
+		if (await _localStorage.ContainKeyAsync("studentName"))
+			studentName = await _localStorage.GetItemAsync<string>("studentName");
+		if (await _localStorage.ContainKeyAsync("studentId"))
+			studentId = await _localStorage.GetItemAsync<int>("studentId");
+		if (await _localStorage.ContainKeyAsync("studentPhoneNumber"))
+			studentPhoneNumber = await _localStorage.GetItemAsync<string>("studentPhoneNumber");
+	}
+	public void changeStudentId(ChangeEventArgs args)
+	{
+		if (args.Value != null && !string.IsNullOrEmpty(args.Value.ToString()) && !string.IsNullOrWhiteSpace(args.Value.ToString()))
+		{
+			_localStorage.RemoveItemAsync("studentId");
+			_localStorage.SetItemAsync<int>("studentId", int.Parse(args.Value.ToString()));
+		}
+	}
+	public void changeStudentName(ChangeEventArgs args)
+	{
+		if (args.Value != null && !string.IsNullOrEmpty(args.Value.ToString()) && !string.IsNullOrWhiteSpace(args.Value.ToString()))
+		{
+			_localStorage.RemoveItemAsync("studentName");
+			_localStorage.SetItemAsync<string>("studentName", args.Value.ToString());
+		}
+	}
+	public void changeStudentPhoneNumber(ChangeEventArgs args)
+	{
+		if (args.Value != null && !string.IsNullOrEmpty(args.Value.ToString()) && !string.IsNullOrWhiteSpace(args.Value.ToString()))
+		{
+			_localStorage.RemoveItemAsync("studentPhoneNumber");
+			_localStorage.SetItemAsync<string>("studentPhoneNumber", args.Value.ToString());
+		}
+	}
+	public async Task TestLogin()
+	{
+		try
+		{
+			bool valid = await manger.ISValid(studentName, studentPhoneNumber);
+			if (valid)
+			{
+				NavigationManager.NavigateTo($"/StudentInfo/{studentName}/{studentPhoneNumber}");
+			}
+			else
+			{
+				NotValid = true;
+				message = "اسم الطالب او رقم الهاتف غير صحيح..";
+			}
+		}
+		catch (Exception ex)
+        {
+            NotValid = true;
+            message = "..لا يوجد اتصال بالانترنت";
+        }
+	
+	}
+	
+	
+}

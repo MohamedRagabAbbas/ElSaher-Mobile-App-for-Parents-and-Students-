@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="..\build\@using System.Net.Http.props" />
+</Project>
